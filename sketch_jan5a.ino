@@ -19,7 +19,31 @@ IRrecv irrecv(IR_PIN);
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 uint8_t servonum = 0;
 
+const int rows = 10;
+const int columns = 7;
+int moveSteps[rows][columns];
+int index = 0;
+
+void savePosition(int positionToSave[], int index){
+  Serial.println("Index:");
+  Serial.println(index);
+  for (int i = 0; i < columns; i++){
+    moveSteps[index][i] = positionToSave[i];
+  }
+} 
+
+void executeSaved(int moveSteps[][7]){
+  for ( int i = 0; i < index; i++){
+    for (int j = 1; j < columns; j++){
+      pwm.setPWM(j, 0, pulseWidth(moveSteps[i][j]));
+      delay(500);
+    }
+    delay(1000);
+  }
+}
+
 int servoNumb = 0;
+const int initialState[7] = {0, 90, 90, 180, 180, 90, 0};
 int angleValue[7] = {0, 90, 90, 180, 180, 90, 0};
 int ledArray[7] = {0, LED_PIN1, LED_PIN2, LED_PIN3, LED_PIN4, LED_PIN5, LED_PIN6};
 int pwmValue = angleValue[servoNumb];
@@ -85,14 +109,24 @@ void loop() {
         servoNumb = 6;
         break;
       case 3175284480:
-        pwm.setPWM(1, 0, pulseWidth(90));
-        pwm.setPWM(2, 0, pulseWidth(90));
-        pwm.setPWM(3, 0, pulseWidth(180));
-        pwm.setPWM(4, 0, pulseWidth(180));
-        pwm.setPWM(5, 0, pulseWidth(90));
-        pwm.setPWM(6, 0, pulseWidth(0));
+        for (int i = 1; i < 7; i++){
+          pwm.setPWM(i, 0, pulseWidth(initialState[i]));
+          delay(500);
+        }
         break;
-      
+      case 3041591040:
+      // Save position
+        savePosition(angleValue, index);
+        index = index + 1;
+        for (int i = 1; i < 7; i++){
+          digitalWrite(ledArray[i], HIGH);
+          delay(100);
+        }
+        break;
+      case 3141861120:
+      // execute position saved
+        executeSaved(moveSteps);
+        break;
     }
     switch(irrecv.decodedIRData.decodedRawData){
       case 3108437760:
@@ -140,44 +174,5 @@ void loop() {
   }
 
   pwm.setPWM(servoNumb, 0, pulseWidth(angleValue[servoNumb]));
-
-
-
-
-
-// pwm.setPWM(2, 0, pulseWidth(90));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(180));pwm.setPWM(5, 0, pulseWidth(90));pwm.setPWM(6, 0, pulseWidth(0));
-// if (sensorValue > 180) {
-//   pwm.setPWM(1, 0, pulseWidth(180));
-// } else {
-//   pwm.setPWM(1, 0, pulseWidth(sensorValue));
-// }
-// for (int motor = 1; motor <= 6; motor++) {
-//   for (int i = 90; i >= 0; i--) {
-//   pwm.setPWM(motor, 0, pulseWidth(i));
-//   delay(50);
-//   };
-// }
-
-// pwm.setPWM(2, 0, pulseWidth(90));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(180));pwm.setPWM(5, 0, pulseWidth(90));pwm.setPWM(6, 0, pulseWidth(0));
-// delay(3000);
-// // Pozitia 2: Servo-motorul M1 merge spre o pozitie de 135 de grade si M4 indreapta incheietura bratului
-// pwm.setPWM(1, 0, pulseWidth(135)); pwm.setPWM(2, 0, pulseWidth(90));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(90));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(0));
-// delay(3000);
-// // Pozitia 3: Servo-motorul M2 se lasa pe spate pentru a avea prindere,
-// pwm.setPWM(1, 0, pulseWidth(135)); pwm.setPWM(2, 0, pulseWidth(95));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(85));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(0));
-// delay(3000);
-// // Pozitia 4: Servo-motorul M6 apuca obiectul
-// pwm.setPWM(1, 0, pulseWidth(135)); pwm.setPWM(2, 0, pulseWidth(95));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(85));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(21));
-// delay(3000);
-// // Pozitia 5: Servo motorul M2 se deplaseaza cu 5 grade in sus pentru a ridica obiectul
-// pwm.setPWM(1, 0, pulseWidth(135)); pwm.setPWM(2, 0, pulseWidth(80));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(85));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(21));
-// delay(3000);
-// // Pozitia 6: Servo motorul M1 se depleaza la gradul 0, deplaseaza obiectul
-// pwm.setPWM(1, 0, pulseWidth(0)); pwm.setPWM(2, 0, pulseWidth(80));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(85));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(21));
-// delay(3000);
-// // Pozitia 7: Servo motorul M6 deschide degetele pentru a lasa obiectul jos
-// pwm.setPWM(1, 0, pulseWidth(0)); pwm.setPWM(2, 0, pulseWidth(90));pwm.setPWM(3, 0, pulseWidth(180));pwm.setPWM(4, 0, pulseWidth(85));pwm.setPWM(5, 0, pulseWidth(85));pwm.setPWM(6, 0, pulseWidth(0));
-// delay(3000);
-
-  
+   
 }
